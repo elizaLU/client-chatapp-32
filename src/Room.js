@@ -1,22 +1,27 @@
 import React, { Component } from 'react'
 import superagent from 'superagent'
-import { Link } from "react-router-dom"
 import { url } from './constants'
 
-export default class Rooms extends Component {
+export default class Room extends Component {
   state = {
-    rooms: [],
+    messages: [],
     value: ''
   }
 
-  stream = new EventSource(
-    `${url}/stream`
-  )
+  stream = {}
 
   componentDidMount = () => {
+    const { name } = this
+      .props.match.params
+
+    const streamUrl = `${url}/streams/${name}`
+
+    this.stream = new EventSource(
+      streamUrl
+    )
+
     this.stream.onmessage = (event) => {
       // Destructure the data (what was passed to stream.send)
-      //message here is a message from server
       const { data } = event
 
       // Convert the serialized string back into JavaScript data
@@ -24,27 +29,28 @@ export default class Rooms extends Component {
 
       // Check the sent data is an array
       if (Array.isArray(parsed)) {
-        // If it is, *we assume it contains ALL rooms*,
+        // If it is, *we assume it contains ALL messages*,
         // and replace the full list in the state
         this.setState({
-          rooms: parsed
+          messages: parsed
         })
       } else {
         // If it is not, *we assume it is a single message*,
         // and add it at the end of the list
-        const rooms = [
-          ...this.state.rooms,
+        const messages = [
+          ...this.state.messages,
           parsed
         ]
 
         // We replace the old list with the extended list
-        this.setState({ rooms })
+        this.setState({ messages })
       }
     }
   }
 
   onChange = (event) => {
     const { value } = event.target
+
     this.setState({ value })
   }
 
@@ -52,12 +58,15 @@ export default class Rooms extends Component {
     event.preventDefault()
 
     const { value } = this.state
-    
-    const postUrl = `${url}/room`
+
+    const { name } = this
+      .props.match.params
+
+    const postUrl = `${url}/message/${name}`
 
     superagent
       .post(postUrl)
-      .send({ name: value })
+      .send({ message: value })
       .then(response => {
         console.log(
           'response test:', response
@@ -72,12 +81,11 @@ export default class Rooms extends Component {
   render() {
     const list = this
       .state
-      .rooms
-      .map((name, index) => <p key={index}
+      .messages
+      .map((message, index) => <p
+        key={index}
       >
-        <Link to={`/room/${name}`}>
-        {name}
-        </Link>
+        {message}
       </p>)
 
     return <div>
