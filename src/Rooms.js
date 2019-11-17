@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import superagent from 'superagent'
 import { Link } from "react-router-dom"
+import { url } from './constants'
 
 export default class Rooms extends Component {
   state = {
@@ -9,7 +10,7 @@ export default class Rooms extends Component {
   }
 
   stream = new EventSource(
-    'http://localhost:4000/stream'
+    `${url}/stream`
   )
 
   componentDidMount = () => {
@@ -44,7 +45,6 @@ export default class Rooms extends Component {
 
   onChange = (event) => {
     const { value } = event.target
-
     this.setState({ value })
   }
 
@@ -52,10 +52,10 @@ export default class Rooms extends Component {
     event.preventDefault()
 
     const { value } = this.state
-    const url = 'http://localhost:4000/room'
+    const postUrl = `${url}/room`
 
     superagent
-      .post(url)
+      .post(postUrl)
       .send({ name: value })
       .then(response => {
         console.log(
@@ -72,8 +72,11 @@ export default class Rooms extends Component {
     const list = this
       .state
       .rooms
-      .map((name, index) => <p key={index}>
-        <Link to={`/room/${name}`}>{name}</Link>
+      .map((name, index) => <p key={index}
+      >
+        <Link to={`/room/${name}`}>
+        {name}
+        </Link>
       </p>)
 
     return <div>
